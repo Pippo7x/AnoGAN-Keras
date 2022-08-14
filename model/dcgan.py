@@ -86,7 +86,7 @@ class DCGAN(object):
         return model
 
     def predict(self, z):
-        return self.gan(z)
+        return self.discriminator(self.generator(z))
 
     def discriminator_loss(self, real_output, fake_output):
         real_loss = self.cross_entropy(tf.ones_like(real_output), real_output)
