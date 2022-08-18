@@ -9,7 +9,7 @@ class DCGAN(object):
     def __init__(self):
         self.image_shape = (64, 64, 3)
         self.noise_dim = 100
-        self.checkpoint_path = r"./ckpt"
+        self.checkpoint_path = r"./ckptv3"
 
         ###
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
@@ -21,21 +21,9 @@ class DCGAN(object):
         self.discriminator = self.build_discriminator(self.image_shape)
 
         self.generator = self.build_generator(self.noise_dim)
-
-        #self.gan = self.build_gan()
         
         #per salvare il modello
         self.checkpoint = tf.train.Checkpoint(generator = self.generator, discriminator = self.discriminator)
-
-    def build_gan(self):
-        z = Input(self.noise_dim)
-        generated_image = self.generator(z)
-
-        decision = self.discriminator(generated_image)
-
-        model = Model(z, decision)
-
-        return model
 
     def build_generator(self, noise_dim):
         #
@@ -44,9 +32,15 @@ class DCGAN(object):
         #
         model = Sequential(name = "Generator")
 
-        model.add(Dense(4*4*128, input_dim = noise_dim, activation = "relu", use_bias = False))
+        model.add(Dense(4*4*256, input_dim = noise_dim, activation = "relu", use_bias = False))
         model.add(BatchNormalization())
-        model.add(Reshape((4,4,128)))
+        model.add(Reshape((4,4,256)))
+
+        model.add(Conv2DTranspose(256, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
+        model.add(BatchNormalization())
+
+        model.add(Conv2DTranspose(128, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
+        model.add(BatchNormalization())
 
         model.add(Conv2DTranspose(64, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
         model.add(BatchNormalization())
@@ -54,13 +48,7 @@ class DCGAN(object):
         model.add(Conv2DTranspose(32, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
         model.add(BatchNormalization())
 
-        model.add(Conv2DTranspose(16, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
-        model.add(BatchNormalization())
-
-        model.add(Conv2DTranspose(8, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
-        model.add(BatchNormalization())
-
-        model.add(Conv2D(3, (5, 5), activation = "tanh", padding = "same", use_bias = False))
+        model.add(Conv2DTranspose(3, (5, 5), activation = "tanh", padding = "same", use_bias = False))
 
         assert model.output_shape == (None, 64, 64, 3)
 
@@ -70,12 +58,22 @@ class DCGAN(object):
 
         model = Sequential(name = "Discriminator")
 
-        model.add(Conv2D(64, kernel_size = (5, 5), strides = (2, 2), input_shape = image_shape, padding = "same"))
+        model.add(Conv2D(32, kernel_size = (5, 5), strides = (2, 2), input_shape = image_shape, padding = "same"))
         model.add(BatchNormalization())
         model.add(LeakyReLU(0.2))
         model.add(Dropout(0.3))
 
-        model.add(Conv2D(128, kernel_size = (5, 5), strides = (2, 2), input_shape = image_shape, padding = "same"))
+        model.add(Conv2D(64, kernel_size = (5, 5), strides = (2, 2), padding = "same"))
+        model.add(BatchNormalization())
+        model.add(LeakyReLU(0.2))
+        model.add(Dropout(0.3))
+
+        model.add(Conv2D(128, kernel_size = (5, 5), strides = (2, 2), padding = "same"))
+        model.add(BatchNormalization())
+        model.add(LeakyReLU(0.2))
+        model.add(Dropout(0.3))
+
+        model.add(Conv2D(256, kernel_size = (5, 5), strides = (2, 2), padding = "same"))
         model.add(BatchNormalization())
         model.add(LeakyReLU(0.2))
         model.add(Dropout(0.3))
