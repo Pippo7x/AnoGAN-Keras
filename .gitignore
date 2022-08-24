@@ -202,7 +202,5 @@ $RECYCLE.BIN/
 
 #Checkpoints
 ckpt/
-ckptv2/
-ckptv3/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,python,jupyternotebooks
