@@ -6,10 +6,10 @@ from tensorflow.keras import Sequential, Model
 from tensorflow.keras.layers import Conv2D, LeakyReLU, Flatten, Dense, Reshape, Conv2DTranspose, Input, MaxPool2D, UpSampling2D, BatchNormalization, Activation, Dropout, ZeroPadding2D
 
 class DCGAN(object):
-    def __init__(self):
-        self.image_shape = (64, 64, 3)
-        self.noise_dim = 100
-        self.checkpoint_path = r"./ckptv3"
+    def __init__(self, image_shape = (64, 64, 3), noise_dim = 100):
+        self.image_shape = image_shape
+        self.noise_dim = noise_dim
+        self.checkpoint_path = r"./ckpt"
 
         ###
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
@@ -17,24 +17,27 @@ class DCGAN(object):
         self.discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
         ###
 
-        #
-        self.discriminator = self.build_discriminator(self.image_shape)
+        #Creo i componenti della rete
+        self.discriminator = self.build_discriminator()
 
-        self.generator = self.build_generator(self.noise_dim)
+        self.generator = self.build_generator()
         
         #per salvare il modello
         self.checkpoint = tf.train.Checkpoint(generator = self.generator, discriminator = self.discriminator)
 
-    def build_generator(self, noise_dim):
+    def build_generator(self):
         #
         # Input shape (None, 100)
         # Output shape (None, 64, 64, 3)
         #
         model = Sequential(name = "Generator")
 
-        model.add(Dense(4*4*256, input_dim = noise_dim, activation = "relu", use_bias = False))
+        model.add(Dense(4*4*512, input_dim = self.noise_dim, activation = "relu", use_bias = False))
         model.add(BatchNormalization())
-        model.add(Reshape((4,4,256)))
+        model.add(Reshape((4,4,512)))
+
+        model.add(Conv2DTranspose(512, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
+        model.add(BatchNormalization())
 
         model.add(Conv2DTranspose(256, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
         model.add(BatchNormalization())
@@ -45,30 +48,17 @@ class DCGAN(object):
         model.add(Conv2DTranspose(64, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
         model.add(BatchNormalization())
 
-        model.add(Conv2DTranspose(32, (5, 5), strides = (2, 2), padding = "same", activation = "relu", use_bias = False))
-        model.add(BatchNormalization())
-
         model.add(Conv2DTranspose(3, (5, 5), activation = "tanh", padding = "same", use_bias = False))
 
         assert model.output_shape == (None, 64, 64, 3)
 
         return model
 
-    def build_discriminator(self, image_shape):
+    def build_discriminator(self):
 
         model = Sequential(name = "Discriminator")
 
-        model.add(Conv2D(32, kernel_size = (5, 5), strides = (2, 2), input_shape = image_shape, padding = "same"))
-        model.add(BatchNormalization())
-        model.add(LeakyReLU(0.2))
-        model.add(Dropout(0.3))
-
-        model.add(Conv2D(64, kernel_size = (5, 5), strides = (2, 2), padding = "same"))
-        model.add(BatchNormalization())
-        model.add(LeakyReLU(0.2))
-        model.add(Dropout(0.3))
-
-        model.add(Conv2D(128, kernel_size = (5, 5), strides = (2, 2), padding = "same"))
+        model.add(Conv2D(128, kernel_size = (5, 5), strides = (2, 2), input_shape = self.image_shape, padding = "same"))
         model.add(BatchNormalization())
         model.add(LeakyReLU(0.2))
         model.add(Dropout(0.3))

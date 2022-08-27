@@ -43,7 +43,7 @@ class AnoGAN(object):
 
         return model
 
-    def compute_anomaly_score(self, x):
+    def anomaly_detection(self, x):
         z = tf.random.normal([1, self.dcgan.noise_dim])
 
         feature_layers = self.extract_feature_layers(self.dcgan.discriminator)
