@@ -49,7 +49,7 @@ class AnoGAN(object):
         feature_layers = self.extract_feature_layers(self.dcgan.discriminator)
         feature_layers_output = feature_layers.predict(x)
 
-        loss = self.model.fit(z, [x, feature_layers_output], epochs = 500, verbose = 0)
+        loss = self.model.fit(z, [x, feature_layers_output], epochs = 1000, verbose = 0)
         similar_data, _ = self.model.predict(z)
 
         return loss.history["loss"][-1], similar_data
