@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-from tensorflow.keras import Sequential, Model
-from tensorflow.keras.layers import Conv2D, LeakyReLU, Flatten, Dense, Reshape, Conv2DTranspose, Input, MaxPool2D, UpSampling2D, BatchNormalization, Activation, Dropout, ZeroPadding2D
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Conv2D, LeakyReLU, Flatten, Dense, Reshape, Conv2DTranspose, Input, BatchNormalization, Dropout
 from IPython import display
 from tqdm import tqdm
 
@@ -13,6 +13,8 @@ class DCGAN(object):
         self.image_shape = image_shape
         self.noise_dim = noise_dim
         self.checkpoint_path = r"./ckpt"
+
+        self.seed = tf.random.normal([1, self.noise_dim])
 
         ###Training settings
         self.cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
@@ -28,10 +30,6 @@ class DCGAN(object):
         self.checkpoint = tf.train.Checkpoint(generator = self.generator, discriminator = self.discriminator)
 
     def build_generator(self):
-        #
-        # Input shape (None, 100)
-        # Output shape (None, 64, 64, 3)
-        #
         model = Sequential(name = "Generator")
 
         model.add(Dense(8*8*256, input_dim = self.noise_dim, activation = "relu", use_bias = False))
@@ -135,8 +133,7 @@ class DCGAN(object):
 
 
     def generate_sample(self):
-        noise = tf.random.normal([1, self.noise_dim])
-        generated_image = self.generator(noise, training = False)
+        generated_image = self.generator(self.seed, training = False)
         generated_image = np.array((generated_image[0] * 127.5) + 127.5, np.int32)
 
         if self.image_shape[2] == 1:
